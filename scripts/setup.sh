@@ -180,17 +180,6 @@ if ! command -v unzip
 then
 	if ! command -v 7z
 	then
-		printf $danger "\n .----------------.  .----------------.  .----------------.  .----------------.\n" 
-		printf $danger "| .--------------. || .--------------. || .--------------. || .--------------. |\n"
-		printf $danger "| |  _______     | || |  _________   | || |  _________   | || | ____    ____ | |\n"
-		printf $danger "| | |_   __ \    | || | |  _   _  |  | || | |_   ___  |  | || ||_   \  /   _|| |\n"
-		printf $danger "| |   | |__) |   | || | |_/ | | \_|  | || |   | |_  \_|  | || |  |   \/   |  | |\n"
-		printf $danger "| |   |  __ /    | || |     | |      | || |   |  _|      | || |  | |\  /| |  | |\n"
-		printf $danger "| |  _| |  \ \_  | || |    _| |_     | || |  _| |_       | || | _| |_\/_| |_ | |\n"
-		printf $danger "| | |____| |___| | || |   |_____|    | || | |_____|      | || ||_____||_____|| |\n"
-		printf $danger "| |              | || |              | || |              | || |              | |\n"
-		printf $danger "| '--------------' || '--------------' || '--------------' || '--------------' |\n"
-		printf $danger " '----------------'  '----------------'  '----------------'  '----------------' \n"
 		printf $danger "You require either unzip OR 7z to decompress the TAK release\n"
 		printf $danger "https://github.com/Cloud-RF/tak-server/blob/main/README.md\n"
 		exit 1
@@ -203,17 +192,6 @@ fi
 
 if [ ! -d "/tmp/takserver/$release/tak" ] 
 then
-	printf $danger "\n .----------------.  .----------------.  .----------------.  .----------------.\n" 
-	printf $danger "| .--------------. || .--------------. || .--------------. || .--------------. |\n"
-	printf $danger "| |  _______     | || |  _________   | || |  _________   | || | ____    ____ | |\n"
-	printf $danger "| | |_   __ \    | || | |  _   _  |  | || | |_   ___  |  | || ||_   \  /   _|| |\n"
-	printf $danger "| |   | |__) |   | || | |_/ | | \_|  | || |   | |_  \_|  | || |  |   \/   |  | |\n"
-	printf $danger "| |   |  __ /    | || |     | |      | || |   |  _|      | || |  | |\  /| |  | |\n"
-	printf $danger "| |  _| |  \ \_  | || |    _| |_     | || |  _| |_       | || | _| |_\/_| |_ | |\n"
-	printf $danger "| | |____| |___| | || |   |_____|    | || | |_____|      | || ||_____||_____|| |\n"
-	printf $danger "| |              | || |              | || |              | || |              | |\n"
-	printf $danger "| '--------------' || '--------------' || '--------------' || '--------------' |\n"
-	printf $danger " '----------------'  '----------------'  '----------------'  '----------------' \n"
 	printf $danger "A decompressed folder was NOT found at /tmp/takserver/$release\n"
 	printf $danger "https://github.com/Cloud-RF/tak-server/blob/main/README.md\n"
 	exit 1
@@ -228,11 +206,11 @@ cp ./CoreConfig.xml ./tak/CoreConfig.xml
 ## Set admin username and password and ensure it meets validation criteria
 user="admin"
 pwd="$(LC_ALL=C tr -dc '[:alpha:][:digit:]' </dev/urandom | head -c 125)"
-password=$pwd"Meh1!"
+password=$pwd
 
 ## Set postgres password and ensure it meets validation criteria
 pgpwd="$(LC_ALL=C tr -dc '[:alpha:][:digit:]' </dev/urandom | head -c 125)"
-pgpassword=$pgpwd"Meh1!"
+pgpassword=$pgpwd
 
 # Interactive NIC selection by C-onethirtyseven
 interfaces=$(ip link show | awk -F': ' '{print $2}' | grep -v '^lo')
@@ -269,52 +247,30 @@ fi
 
 sed -i "s%\`awk '/MemTotal/ {print \$2}' /proc/meminfo\`%$mem%g" tak/setenv.sh
 
-# Commented out since everyone just kept hitting enter x4. dumb=dumb
-
-## Set variables for generating CA and client certs
-#printf $warning "SSL setup. Hit enter (x4) to accept the defaults:\n"
-#read -p "Country (for cert generation). Default [US] : " country
-#read -p "State (for cert generation). Default [state] : " state
-#read -p "City (for cert generation). Default [city]: " city
-#read -p "Organizational Unit (for cert generation). Default [org]: " orgunit
-
-if [ -z "$country" ];
-then
-	country="GB"
-fi
-
-if [ -z "$state" ];
-then
-	state="Warwickshire"
-fi
-
-if [ -z "$city" ];
-then
-	city="Coventry" # British joke
-fi
-
-if [ -z "$orgunit" ];
-then
-	orgunit="TAK"
-fi
-
 # Update local env
-export COUNTRY=$country
-export STATE=$state
-export CITY=$city
-export ORGANIZATIONAL_UNIT=$orgunit
+export COUNTRY="LT"
+export STATE="WEST"
+export CITY="KLAIPEDA"
+export ORGANIZATIONAL_UNIT="SPV"
 
 
 # Writes variables to a .env file for docker-compose
 cat << EOF > .env
-COUNTRY=$country
-STATE=$state
-CITY=$city
-ORGANIZATIONAL_UNIT=$orgunit
+COUNTRY=$COUNTRY
+STATE=$STATE
+CITY=$CITY
+ORGANIZATIONAL_UNIT=$ORGANIZATIONAL_UNIT
 EOF
 
-### Update cert-metadata.sh with configured country. Fallback to US if variable not set.
-sed -i -e 's/COUNTRY=US/COUNTRY=${COUNTRY}/' $PWD/tak/certs/cert-metadata.sh
+CERT_META="$PWD/tak/certs/cert-metadata.sh"
+
+
+sed -i \
+  -e "s|^COUNTRY=.*|COUNTRY=\"${COUNTRY}\"|" \
+  -e "s|^STATE=.*|STATE=\"${STATE}\"|" \
+  -e "s|^CITY=.*|CITY=\"${CITY}\"|" \
+  -e "s|^ORGANIZATIONAL_UNIT=.*|ORGANIZATIONAL_UNIT=\"${ORGANIZATIONAL_UNIT}\"|" \
+  "$CERT_META"
 
 
 ### Runs through setup, starts both containers
@@ -322,24 +278,34 @@ $DOCKER_COMPOSE --file $DOCKERFILE up  --force-recreate -d
 
 ### Checking if the container is set up and ready to set the certificates
 
+ROOTCAPASS=$(openssl rand -hex 16)
+SERVERPASS=$(openssl rand -hex 16)
+USERPASS=Kovas!128
+
 while :
 do
 	sleep 5 # let the PG stderr messages conclude...
 	printf $warning "------------CERTIFICATE GENERATION--------------\n"
-	$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && ./makeRootCa.sh --ca-name CRFtakserver"
+	$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && CAPASS='$ROOTCAPASS' ./makeRootCa.sh --ca-name SPVTAKServer"
 	if [ $? -eq 0 ];
 	then
-		$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && ./makeCert.sh server $IP"
+		$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && CAPASS='$ROOTCAPASS' PASS='$SERVERPASS' ./makeCert.sh server $IP"
 		if [ $? -eq 0 ];
 		then
-			$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && ./makeCert.sh client $user"	
+			$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && CAPASS='$ROOTCAPASS' PASS='$USERPASS' ./makeCert.sh client $user"
 			if [ $? -eq 0 ];
 			then
-				# Set permissions so user can write to certs/files
-				# The ubuntu user has uid 1000 which should map to our host user id 1000. Type 'id' to find yours :)
-				$DOCKER_COMPOSE exec tak bash -c "chown -R $UID:$GID /opt/tak/certs/"
-				#$DOCKER_COMPOSE stop tak
-				break
+				$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && MOVE_CA=true CAPASS='$ROOTCAPASS' ./makeCert.sh ca SPVintermediate"
+				if [ $? -eq 0 ];
+				then
+					# Set permissions so user can write to certs/files
+					# The ubuntu user has uid 1000 which should map to our host user id 1000. Type 'id' to find yours :)
+					$DOCKER_COMPOSE exec tak bash -c "chown -R $UID:$GID /opt/tak/certs/"
+					#$DOCKER_COMPOSE stop tak
+					break
+				fi
+			else
+				sleep 5
 			fi
 		else
 			sleep 5
@@ -347,15 +313,12 @@ do
 	fi
 done
 
-printf $info "Creating certificates for 2 users in tak/certs/files for a quick setup via TAK's import function\n"
+printf $info "Creating certificates for EUD in tak/certs/files for a quick setup via TAK's import function\n"
 
-# Make 2 users
-$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && ./makeCert.sh client user1"
-$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && ./makeCert.sh client user2"
+$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/certs && CAPASS='$ROOTCAPASS' PASS='$USERPASS' ./makeCert.sh client EUD1"
 $DOCKER_COMPOSE exec tak bash -c "chown -R $UID:$GID /opt/tak/certs/"
 
-./scripts/certDP.sh $IP user1
-./scripts/certDP.sh $IP user2
+./scripts/certDP.sh $IP EUD1
 
 printf $info "Waiting for TAK server to connect to DB. This should loop several times only...\n"
 #$DOCKER_COMPOSE start tak
@@ -395,11 +358,12 @@ docker container ls
 printf $warning "\n\nImport the $user.p12 certificate from this folder to your browser's certificate store as per the README.md file\n"
 printf $success "Login at https://$IP:8443 with your admin account. No need to run the /setup step as this has been done.\n" 
 printf $info "Certificates and .zip data packages are in tak/certs/files \n\n" 
-printf $success "Setup script sponsored by CloudRF.com - \"The API for RF\"\n\n"
 printf $danger "---------PASSWORDS----------------\n\n"
 printf $danger "Admin user name: $user\n" # Web interface default user name
 printf $danger "Admin password: $password\n" # Web interface default random password created during setup
 printf $danger "PostgreSQL password: $pgpassword\n\n" # PostgreSQL password randomly generated during set up
+printf $danger "RootCA password: $ROOTCAPASS\n\n"
+
 printf $danger "---------PASSWORDS----------------\n\n"
 printf $warning "MAKE A NOTE OF YOUR PASSWORDS. THEY WON'T BE SHOWN AGAIN.\n"
 printf $info "Docker containers should automatically start with the Docker service from now on.\n"

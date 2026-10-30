@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Configuration xmlns="http://bbn.com/marti/xml/config">
-    <network multicastTTL="5" serverId="f6edbf55ccfa4af1b4cfa2d7f177ea67" version="4.7-RELEASE-18-HEAD">
+    <network multicastTTL="5" serverId="f6edbf55ccfa4af1b4cfa2d7f177ea67" version="5.8-RELEASE-92-HEAD">
         <!-- <input auth="anonymous" _name="stdtcp" protocol="tcp" port="8087"/>
         <input auth="anonymous" _name="stdudp" protocol="udp" port="8087"/>
         <input auth="anonymous" _name="streamtcp" protocol="stcp" port="8088"/> -->
@@ -58,21 +58,21 @@
         </queue>
     </buffer>
     <dissemination smartRetry="false"/>
-    <certificateSigning CA="TAKServer">
+    <certificateSigning CA="SPVTAKServer">
         <certificateConfig>
             <nameEntries>
                 <nameEntry name="O" value="TAK"/>
                 <nameEntry name="OU" value="TAK"/>
             </nameEntries>
         </certificateConfig>
-        <TAKServerCAConfig keystore="JKS" keystoreFile="/opt/tak/certs/files/takserver.jks" keystorePass="atakatak" validityDays="30" signatureAlg="SHA256WithRSA"/>
+        <TAKServerCAConfig keystore="JKS" keystoreFile="/opt/tak/certs/files/SPVintermediate.jks" keystorePass="[CAPASS]" validityDays="30" signatureAlg="SHA256WithRSA"/>
     </certificateSigning>
     <security>
-        <tls keystore="JKS" keystoreFile="/opt/tak/certs/files/takserver.jks" keystorePass="atakatak" truststore="JKS" truststoreFile="/opt/tak/certs/files/truststore-root.jks" truststorePass="atakatak" context="TLSv1.2" keymanager="SunX509"/>
+        <tls keystore="JKS" keystoreFile="/opt/tak/certs/files/10.10.10.5.jks" keystorePass="atakatak" truststore="JKS" truststoreFile="/opt/tak/certs/files/truststore-root.jks" truststorePass="atakatak" context="TLSv1.2" keymanager="SunX509"/>
     </security>
     <federation missionFederationDisruptionToleranceRecencySeconds="43200">
         <federation-server webBaseUrl="https://HOSTIP:8443/Marti">
-            <tls keystore="JKS" keystoreFile="/opt/tak/certs/files/takserver.jks" keystorePass="atakatak" truststore="JKS" truststoreFile="certs/files/fed-truststore.jks" truststorePass="atakatak" keymanager="SunX509"/>
+            <tls keystore="JKS" keystoreFile="/opt/tak/certs/files/10.10.10.5.jks" keystorePass="atakatak" truststore="JKS" truststoreFile="certs/files/truststore-SPVintermediate.jks" truststorePass="[CAPASS]" keymanager="SunX509"/>
             <v1Tls tlsVersion="TLSv1.2"/>
             <v1Tls tlsVersion="TLSv1.3"/>
         </federation-server>

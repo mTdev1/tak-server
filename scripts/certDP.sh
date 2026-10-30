@@ -8,6 +8,9 @@ fi
 
 IP=$1
 USER=$2
+UUID=$(uuidgen)
+ROOTCAPASS=$ROOTCAPASS
+USERPASS=$USERPASS
 
 # server.pref
 
@@ -22,8 +25,8 @@ echo "  </preference>" >> server.pref
 echo "  <preference version=\"1\" name=\"com.atakmap.app_preferences\">" >> server.pref
 echo "    <entry key=\"displayServerConnectionWidget\" class=\"class java.lang.Boolean\">true</entry>" >> server.pref
 echo "    <entry key=\"caLocation\" class=\"class java.lang.String\">cert/$IP.p12</entry>" >> server.pref
-echo "    <entry key=\"caPassword\" class=\"class java.lang.String\">atakatak</entry>" >> server.pref
-echo "    <entry key=\"clientPassword\" class=\"class java.lang.String\">atakatak</entry>" >> server.pref
+echo "    <entry key=\"caPassword\" class=\"class java.lang.String\">$ROOTCAPASS</entry>" >> server.pref
+echo "    <entry key=\"clientPassword\" class=\"class java.lang.String\">$USERPASS</entry>" >> server.pref
 echo "    <entry key=\"certificateLocation\" class=\"class java.lang.String\">cert/$USER.p12</entry>" >> server.pref
 echo "  </preference>" >> server.pref
 echo "</preferences>" >> server.pref
@@ -33,7 +36,7 @@ echo "</preferences>" >> server.pref
 
 echo "<MissionPackageManifest version=\"2\">" > manifest.xml
 echo "  <Configuration>" >> manifest.xml
-echo "    <Parameter name=\"uid\" value=\"sponsored-by-cloudrf-the-api-for-rf\"/>" >> manifest.xml
+echo "    <Parameter name=\"uid\" value=\"$UUID\"/>" >> manifest.xml
 echo "    <Parameter name=\"name\" value=\"$USER DP\"/>" >> manifest.xml
 echo "    <Parameter name=\"onReceiveDelete\" value=\"true\"/>" >> manifest.xml
 echo "  </Configuration>" >> manifest.xml

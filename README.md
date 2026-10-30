@@ -180,7 +180,7 @@ The `admin.p12` certificate needs to be copied from `./tak/certs/files/` and ins
 
 * Go to **"Settings"** --> **"Privacy and Security"** --> **"Security"** --> **"Manage Certificates"**
 * Navigate to **"Your certificates"** 
-* Press **"Import"** button and choose your `.p12` file (Default password is `atakatak`)
+* Press **"Import"** button and choose your `.p12` file
 
 The web UI should be now accessible via the address given below.
 
@@ -188,7 +188,7 @@ The web UI should be now accessible via the address given below.
 
 * Go to **"Settings"** --> **"Privacy & Security"** --> scroll down to **"Certificates"** section.
 * Click the button **"View Certificates"**
-* Choose **"Your Certificates"** section and **"Import"** your `.p12` certificate (Default password is `atakatak`)
+* Choose **"Your Certificates"** section and **"Import"** your `.p12` certificate
 * Choose the **"Authorities"** section
 * Locate **"TAK"** line, there should be your certificate name displayed underneath it
 * Click your certificate name and press button **"Edit Trust"**
