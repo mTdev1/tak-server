@@ -2,7 +2,14 @@ import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-PORT = int(os.environ.get("PORT", "8080"))
+PORT = int(os.environ.get("PORT", "80"))
+
+HELLO_PAGE = b"""<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Hello World</title></head>
+<body><h1>Hello, World!</h1></body>
+</html>
+"""
 
 
 class EchoHandler(BaseHTTPRequestHandler):
@@ -16,15 +23,21 @@ class EchoHandler(BaseHTTPRequestHandler):
         if body:
             print(f"\n{body}", flush=True)
 
+        if self.command in ("GET", "HEAD"):
+            self._send(HELLO_PAGE, "text/html; charset=utf-8")
+            return
+
         payload = json.dumps({
             "method": self.command,
             "path": self.path,
             "headers": dict(self.headers.items()),
             "body": body,
         }, indent=2).encode()
+        self._send(payload, "application/json")
 
+    def _send(self, payload, content_type):
         self.send_response(200)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         if self.command != "HEAD":

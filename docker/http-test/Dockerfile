@@ -5,7 +5,7 @@ RUN apk add --no-cache curl
 WORKDIR /app
 COPY server.py .
 
-ENV PORT=8080
-EXPOSE 8080
+ENV PORT=80
+EXPOSE 80
 
 CMD ["python", "-u", "server.py"]
